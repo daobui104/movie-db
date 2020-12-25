@@ -16,21 +16,43 @@ class App extends Component {
   }
 
   componentDidMount() {
-    fetch(
-      `https://api.themoviedb.org/3/movie/top_rated?api_key=${TMDB.api_key}&language=en-US&page=1`
-    )
-      .then((response) => {
-        return response.json();
-      })
-      .then((top) => {
-        //console.log(top);
-        this.setState({
-          films: top.results
+    let page = 1;
+    let totalPages = 1;
+
+    for (page = 1; page <= totalPages; page++) {
+      fetch(
+        `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB.api_key}&page=${page}`
+      )
+        .then((response) => {
+          return response.json();
+        })
+        .then((now) => {
+          console.log(now);
+          this.setState({
+            films: [...this.state.films, ...now.results]
+          });
+          if (totalPages === 1) {
+            totalPages = now.total_pages;
+          }
+          console.log("during: " + totalPages);
+        })
+        .catch((ex) => {
+          console.log(ex);
         });
-      })
-      .catch((ex) => {
-        console.log(ex);
-      });
+
+      console.log("after - page: " + page);
+      console.log("after - totalPages: " + totalPages);
+    }
+    console.log("final: " + totalPages);
+  }
+
+  getEnMovies(films) {
+    for (let i = 0; i < films.length; i++) {
+      if (films[i].original_language !== "en") {
+        films.splice(i, 1);
+      }
+    }
+    return films;
   }
 
   handleFaveToggle = (film) => {
@@ -38,34 +60,30 @@ class App extends Component {
     const faves = [...this.state.faves];
     const filmIndex = faves.indexOf(film);
     if (filmIndex >= 0) {
-      console.log(`removing ${film.title}`);
       faves.splice(filmIndex, 1);
     } else {
       faves.push(film);
-      console.log(`adding ${film.title}`);
     }
     this.setState({ faves });
   };
 
   handleDetailsClick = (film) => {
     //console.log(`Fetching details for ${film.title}`);
-    const url1 = `https://api.themoviedb.org/3/movie/${film.id}?api_key=${TMDB.api_key}&append_to_response=videos,images&language=en`;
-    const url2 = `https://api.themoviedb.org/3/movie/${film.id}/credits?api_key=${TMDB.api_key}`;
-    fetch(url1)
+    const movieUrl = `https://api.themoviedb.org/3/movie/${film.id}?api_key=${TMDB.api_key}&append_to_response=videos,images&language=en`;
+    const castUrl = `https://api.themoviedb.org/3/movie/${film.id}/credits?api_key=${TMDB.api_key}`;
+    fetch(movieUrl)
       .then((response) => {
         return response.json();
       })
       .then((data) => {
-        //console.log(data); // Take a look at what you get back.
         this.setState({ current: data });
       });
 
-    fetch(url2)
+    fetch(castUrl)
       .then((response) => {
         return response.json();
       })
       .then((actor) => {
-        //console.log(actor.cast[0].name); // Take a look at what you get back.
         this.setState({ cast: actor.cast });
       });
   };
@@ -73,7 +91,7 @@ class App extends Component {
     return (
       <div className="film-library">
         <FilmListing
-          films={this.state.films}
+          films={this.getEnMovies(this.state.films)}
           faves={this.state.faves}
           onFaveToggle={this.handleFaveToggle}
           handleDetailsClick={this.handleDetailsClick}

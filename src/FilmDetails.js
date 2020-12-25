@@ -34,6 +34,8 @@ function FilmDetails(props) {
             alt={props.film.title}
           />
           {props.film.overview}
+          <br />
+          {props.film.original_language}
         </p>
       </div>
       <div className="film-cast">

@@ -30,7 +30,7 @@ class FilmListing extends Component {
 
     return (
       <div className="film-list">
-        <h1 className="section-title">TOP RATED</h1>
+        <h1 className="section-title">NOW PLAYING</h1>
         <div className="film-list-filters">
           <div
             className={`film-list-filter ${
